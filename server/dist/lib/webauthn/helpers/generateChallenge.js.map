@@ -1,0 +1,1 @@
+{"version":3,"file":"generateChallenge.js","sourceRoot":"","sources":["../../../../lib/webauthn/helpers/generateChallenge.ts"],"names":[],"mappings":";;;;;AAAA,oDAA4B;AAE5B;;GAEG;AACH,SAAwB,iBAAiB;IACvC;;;;;;;OAOG;IACH,OAAO,gBAAM,CAAC,WAAW,CAAC,EAAE,CAAC,CAAC;AAChC,CAAC;AAVD,oCAUC"}
