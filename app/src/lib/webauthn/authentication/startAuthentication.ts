@@ -47,6 +47,7 @@ export default async function startAuthentication(
       options
     )) as AuthenticationCredential;
   } catch (err) {
+    console.log(err);
     throw identifyAuthenticationError({ error: err as Error, options });
   }
 

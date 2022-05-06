@@ -1,4 +1,4 @@
-import { LoggedInUser } from "./types/server";
+import { DBLoggedInUser, LoggedInUser } from "./types/server";
  
 
 const {
@@ -26,3 +26,59 @@ export const inMemoryUserDeviceDB: { [loggedInUserId: string]: LoggedInUser } = 
     currentChallenge: undefined,
   },
 };
+
+export function userDeviceDBObject(userId: string): LoggedInUser {
+  return {
+    id: userId,
+    username: `${userId}@${rpID}`,
+    devices: [],
+    /**
+     * A simple way of storing a user's current challenge being signed by registration or authentication.
+     * It should be expired after `timeout` milliseconds (optional argument for `generate` methods,
+     * defaults to 60000ms)
+     */
+    currentChallenge: undefined,
+  };
+}
+
+export function transferUserFromDBToUser(userFromDB: DBLoggedInUser): LoggedInUser {
+  const devices = userFromDB.devices.map(device => {
+    console.log(device);
+    return {
+      credentialPublicKey: Buffer.from((device as any).credentialPublicKey, "base64"),
+      credentialID: Buffer.from((device as  any).credentialID, "base64"),
+      counter: (device as any).counter,
+      transports: (device as any).transports,
+    }
+  });
+
+  const user = {
+    id: userFromDB.id,
+    username: userFromDB.username,
+    devices,
+    currentChallenge: userFromDB.currentChallenge
+  }
+
+  return user;
+}
+
+export function transferUserToUserForDB(user: LoggedInUser): DBLoggedInUser {
+  const devices = user.devices.map(device => {
+    return {
+      credentialPublicKey: device.credentialPublicKey.toString("base64"),
+      credentialID: device.credentialID.toString("base64"),
+      counter: device.counter,
+      transports: device.transports,
+    }
+  });
+
+  const userForDB = {
+    id: user.id,
+    username: user.username,
+    devices,
+    currentChallenge: user.currentChallenge
+  }
+
+  return userForDB;
+}
+

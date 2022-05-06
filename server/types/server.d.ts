@@ -6,3 +6,10 @@ interface LoggedInUser {
   devices: AuthenticatorDevice[];
   currentChallenge?: string;
 }
+
+interface DBLoggedInUser {
+  id: string;
+  username: string;
+  devices: Object[];
+  currentChallenge?: string;
+}

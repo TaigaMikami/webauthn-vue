@@ -37,6 +37,7 @@ export interface PublicKeyCredentialRequestOptionsJSON extends Omit<PublicKeyCre
  * are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
  */
  export interface RegistrationCredentialJSON extends Omit<RegistrationCredential, 'response' | 'rawId' | 'getClientExtensionResults'> {
+  userId: string;
   rawId: Base64URLString;
   response: AuthenticatorAttestationResponseJSON;
   clientExtensionResults: AuthenticationExtensionsClientOutputs;
@@ -99,6 +100,7 @@ export interface PublicKeyCredentialRequestOptionsJSON extends Omit<PublicKeyCre
  * are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
  */
  export interface AuthenticationCredentialJSON extends Omit<AuthenticationCredential, 'response' | 'rawId' | 'getClientExtensionResults'> {
+  userId: string;
   rawId: Base64URLString;
   response: AuthenticatorAssertionResponseJSON;
   clientExtensionResults: AuthenticationExtensionsClientOutputs;

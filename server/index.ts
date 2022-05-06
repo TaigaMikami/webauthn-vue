@@ -1,5 +1,5 @@
 import express from "express";
-import { inMemoryUserDeviceDB, loggedInUserId, rpID, expectedOrigin } from "./server-helper";
+import { inMemoryUserDeviceDB, loggedInUserId, rpID, expectedOrigin, userDeviceDBObject, transferUserFromDBToUser, transferUserToUserForDB } from "./server-helper";
 import type {
   GenerateRegistrationOptionsOpts
 } from "./lib/webauthn/registration/generateRegistrationOptions";
@@ -18,9 +18,13 @@ import verifyRegistrationResponse from "./lib/webauthn/registration/verifyRegist
 import generateAuthenticationOptions, { GenerateAuthenticationOptionsOpts } from "./lib/webauthn/authentication/generateAuthenticationOptions";
 import base64url from "base64url";
 import verifyAuthenticationResponse, { VerifiedAuthenticationResponse, VerifyAuthenticationResponseOpts } from "./lib/webauthn/authentication/verifyAuthenticationResponse";
+import { DbEngine } from "./db/mongodb";
+import { LoggedInUser } from "./types/server";
 
 const app = express();
 const port = "8081"
+const dbEngine = new DbEngine("webauthn-db");
+dbEngine.init();
 
 app.use(express.json());
 
@@ -32,8 +36,10 @@ app.use(function(req, res, next) {
 });
 
 
-app.get("/generate-registration-options", (req, res) => {
-  const user = inMemoryUserDeviceDB[loggedInUserId];
+app.post("/generate-registration-options", async (req, res) => {
+  const userId = req.body.userId;
+  const user = userDeviceDBObject(userId);
+  // const user = inMemoryUserDeviceDB[loggedInUserId];
 
   const {
     /**
@@ -46,7 +52,7 @@ app.get("/generate-registration-options", (req, res) => {
   const opts: GenerateRegistrationOptionsOpts = {
     rpName: 'SimpleWebAuthn Example',
     rpID,
-    userID: loggedInUserId,
+    userID: userId,
     userName: username,
     timeout: 60000,
     attestationType: 'none',
@@ -80,15 +86,27 @@ app.get("/generate-registration-options", (req, res) => {
    * The server needs to temporarily remember this value for verification, so don't lose it until
    * after you verify an authenticator response.
    */
-   inMemoryUserDeviceDB[loggedInUserId].currentChallenge = options.challenge;
+  user.currentChallenge = options.challenge;
 
-   res.send(options);
+  const userData = await dbEngine.findOne(userId);
+  if (!userData) {
+    await dbEngine.insert(user);
+  } else {
+    console.log("this user already exist");
+  }
+  console.log(userData);
+
+  res.send(options);
 });
 
 app.post('/verify-registration', async (req, res) => {
   const body: RegistrationCredentialJSON = req.body;
+  console.log(body);
+  const userId = body.userId;
 
-  const user = inMemoryUserDeviceDB[loggedInUserId];
+  const userFromDB = await dbEngine.findOne(userId);
+  const user = transferUserFromDBToUser(userFromDB);
+  console.log(user)
 
   const expectedChallenge = user.currentChallenge;
 
@@ -127,6 +145,8 @@ app.post('/verify-registration', async (req, res) => {
         transports: body.transports,
       };
       user.devices.push(newDevice);
+      const  userForDB = transferUserToUserForDB(user);
+      await dbEngine.updateOne(userId, userForDB);
     }
   }
 
@@ -141,9 +161,16 @@ app.get("/in-memory", (req, res) => {
 /**
  * Login (a.k.a. "Authentication")
  */
- app.get('/generate-authentication-options', (req, res) => {
+ app.post('/generate-authentication-options', async (req, res) => {
+  const userId = req.body.userId;
   // You need to know the user by this point
-  const user = inMemoryUserDeviceDB[loggedInUserId];
+  // const user = inMemoryUserDeviceDB[loggedInUserId];
+  const userFromDB = await dbEngine.findOne(userId);
+  const user = transferUserFromDBToUser(userFromDB);
+ 
+  console.log("=========================");
+  console.log(user);
+  console.log("=========================");
 
   const opts: GenerateAuthenticationOptionsOpts = {
     timeout: 60000,
@@ -162,15 +189,22 @@ app.get("/in-memory", (req, res) => {
    * The server needs to temporarily remember this value for verification, so don't lose it until
    * after you verify an authenticator response.
    */
-  inMemoryUserDeviceDB[loggedInUserId].currentChallenge = options.challenge;
+  user.currentChallenge = options.challenge;
+  const userForDB = transferUserToUserForDB(user);
+  await dbEngine.updateOne(user.id, userForDB);
 
   res.send(options);
 });
 
-app.post('/verify-authentication', (req, res) => {
+app.post('/verify-authentication', async (req, res) => {
   const body: AuthenticationCredentialJSON = req.body;
+  const userId = body.userId;
 
-  const user = inMemoryUserDeviceDB[loggedInUserId];
+  const userFromDB = await dbEngine.findOne(userId);
+  const user = transferUserFromDBToUser(userFromDB);
+  console.log("=========================");
+  console.log(user);
+  console.log("=========================");
 
   const expectedChallenge = user.currentChallenge;
 
