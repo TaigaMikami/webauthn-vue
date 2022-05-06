@@ -21,7 +21,8 @@
     "jsrsasign": "^10.5.16",
     "jwk-to-pem": "^2.0.5",
     "node-fetch": "^2.6.0",
-    "node-rsa": "^1.1.1"
+    "node-rsa": "^1.1.1",
+    "tingodb": "^0.6.1"
   },
   "devDependencies": {
     "@types/cbor": "^5.0.1",
