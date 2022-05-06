@@ -74,3 +74,32 @@ export interface PublicKeyCredentialRequestOptionsJSON extends Omit<PublicKeyCre
   getPublicKey?: () => ArrayBuffer;
   getPublicKeyAlgorithm?: () => COSEAlgorithmIdentifier[];
 }
+
+
+/**
+ * The value returned from navigator.credentials.get()
+ */
+ export interface AuthenticationCredential extends PublicKeyCredential {
+  response: AuthenticatorAssertionResponse;
+}
+
+/**
+ * A slightly-modified AuthenticatorAssertionResponse to simplify working with ArrayBuffers that
+ * are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+ */
+ export interface AuthenticatorAssertionResponseJSON extends Omit<AuthenticatorAssertionResponse, 'authenticatorData' | 'clientDataJSON' | 'signature' | 'userHandle'> {
+  authenticatorData: Base64URLString;
+  clientDataJSON: Base64URLString;
+  signature: Base64URLString;
+  userHandle?: string;
+}
+
+/**
+ * A slightly-modified AuthenticationCredential to simplify working with ArrayBuffers that
+ * are Base64URL-encoded in the browser so that they can be sent as JSON to the server.
+ */
+ export interface AuthenticationCredentialJSON extends Omit<AuthenticationCredential, 'response' | 'rawId' | 'getClientExtensionResults'> {
+  rawId: Base64URLString;
+  response: AuthenticatorAssertionResponseJSON;
+  clientExtensionResults: AuthenticationExtensionsClientOutputs;
+}

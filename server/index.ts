@@ -9,12 +9,15 @@ import {
 } from "./lib/webauthn/registration/generateRegistrationOptions";
 import type {
   RegistrationCredentialJSON,
-  AuthenticatorDevice
+  AuthenticatorDevice,
+  AuthenticationCredentialJSON
 } from "./lib/webauthn/types";
 
 import type { VerifiedRegistrationResponse, VerifyRegistrationResponseOpts } from "./lib/webauthn/registration/verifyRegistrationResponse";
 import verifyRegistrationResponse from "./lib/webauthn/registration/verifyRegistrationResponse";
 import generateAuthenticationOptions, { GenerateAuthenticationOptionsOpts } from "./lib/webauthn/authentication/generateAuthenticationOptions";
+import base64url from "base64url";
+import verifyAuthenticationResponse, { VerifiedAuthenticationResponse, VerifyAuthenticationResponseOpts } from "./lib/webauthn/authentication/verifyAuthenticationResponse";
 
 const app = express();
 const port = "8081"
@@ -164,6 +167,53 @@ app.get("/in-memory", (req, res) => {
   res.send(options);
 });
 
+app.post('/verify-authentication', (req, res) => {
+  const body: AuthenticationCredentialJSON = req.body;
+
+  const user = inMemoryUserDeviceDB[loggedInUserId];
+
+  const expectedChallenge = user.currentChallenge;
+
+  let dbAuthenticator;
+  const bodyCredIDBuffer = base64url.toBuffer(body.rawId);
+  // "Query the DB" here for an authenticator matching `credentialID`
+  for (const dev of user.devices) {
+    if (dev.credentialID.equals(bodyCredIDBuffer)) {
+      dbAuthenticator = dev;
+      break;
+    }
+  }
+
+  if (!dbAuthenticator) {
+    throw new Error(`could not find authenticator matching ${body.id}`);
+  }
+
+  let verification: VerifiedAuthenticationResponse;
+  try {
+    const opts: VerifyAuthenticationResponseOpts = {
+      credential: body,
+      expectedChallenge: `${expectedChallenge}`,
+      expectedOrigin,
+      expectedRPID: rpID,
+      authenticator: dbAuthenticator,
+      requireUserVerification: true,
+    };
+    verification = verifyAuthenticationResponse(opts);
+  } catch (error) {
+    const _error = error as Error;
+    console.error(_error);
+    return res.status(400).send({ error: _error.message });
+  }
+
+  const { verified, authenticationInfo } = verification;
+
+  if (verified) {
+    // Update the authenticator's counter in the DB to the newest count in the authentication
+    dbAuthenticator.counter = authenticationInfo.newCounter;
+  }
+
+  res.send({ verified });
+});
 
 app.listen(port, () => {
   console.log(`🚀 Server ready at ${port}`)
