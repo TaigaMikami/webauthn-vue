@@ -52,3 +52,48 @@ export interface AuthenticatorAttestationResponseJSON
   clientDataJSON: Base64URLString;
   attestationObject: Base64URLString;
 }
+
+// authentication
+export interface PublicKeyCredentialRequestOptionsJSON
+  extends Omit<
+    PublicKeyCredentialRequestOptions,
+    "challenge" | "allowCredentials"
+  > {
+  challenge: Base64URLString;
+  allowCredentials?: PublicKeyCredentialDescriptorJSON[];
+  extensions?: AuthenticationExtensionsClientInputs;
+}
+
+export interface AuthenticationCredential extends PublicKeyCredential {
+  response: AuthenticatorAssertionResponse;
+}
+
+export interface AuthenticatorAttestationResponseJSON
+  extends Omit<
+    AuthenticatorAttestationResponseFuture,
+    "clientDataJSON" | "attestationObject"
+  > {
+  clientDataJSON: Base64URLString;
+  attestationObject: Base64URLString;
+}
+
+export interface AuthenticatorAssertionResponseJSON
+  extends Omit<
+    AuthenticatorAssertionResponse,
+    "authenticatorData" | "clientDataJSON" | "signature" | "userHandle"
+  > {
+  authenticatorData: Base64URLString;
+  clientDataJSON: Base64URLString;
+  signature: Base64URLString;
+  userHandle?: string;
+}
+
+export interface AuthenticationCredentialJSON
+  extends Omit<
+    AuthenticationCredential,
+    "response" | "rawId" | "getClientExtensionResults"
+  > {
+  rawId: Base64URLString;
+  response: AuthenticatorAssertionResponseJSON;
+  clientExtensionResults: AuthenticationExtensionsClientOutputs;
+}

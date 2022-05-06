@@ -3,10 +3,8 @@
     <b-jumbotron header="WebAuthn-Vue" lead="">
       <img alt="Vue logo" src="../assets/logo.png" />
       <hr class="ma-4" />
+      <h1>Login Success!</h1>
     </b-jumbotron>
-    <div>
-      <b-card title="Card title"> </b-card>
-    </div>
   </div>
 </template>
 

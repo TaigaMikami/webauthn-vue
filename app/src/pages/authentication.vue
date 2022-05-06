@@ -7,8 +7,15 @@
     <div>
       <b-card title="Card title">
         <b-card-text>A second paragraph of text in the card.</b-card-text>
-        <b-button variant="primary" @click="generateRegistrationOptions">
-          generateRegistrationOptions
+        <b-button variant="success" @click="registration">
+          Registration
+        </b-button>
+      </b-card>
+
+      <b-card title="Card title">
+        <b-card-text>A second paragraph of text in the card.</b-card-text>
+        <b-button variant="primary" @click="authentication">
+          authentication
         </b-button>
       </b-card>
 
@@ -33,6 +40,7 @@
 import Vue from "vue";
 import { browserSupportsWebAuthn } from "@/lib/webauthn/helpers/browserSupportsWebAuthn";
 import startRegistration from "@/lib/webauthn/registration/startRegistration";
+import startAuthentication from "@/lib/webauthn/authentication/startAuthentication";
 
 export default Vue.extend({
   name: "Authentication",
@@ -46,7 +54,7 @@ export default Vue.extend({
     checkBrowserSupportsWebAuth() {
       console.log(browserSupportsWebAuthn());
     },
-    async generateRegistrationOptions() {
+    async registration() {
       const resp = await fetch(
         "http://localhost:8081/generate-registration-options"
       );
@@ -68,6 +76,30 @@ export default Vue.extend({
       );
       const verificationJSON = await verificationResp.json();
       console.log(verificationJSON);
+    },
+    async authentication() {
+      const resp = await fetch(
+        "http://localhost:8081/generate-authentication-options"
+      );
+      const opts = await resp.json();
+      console.log(opts);
+
+      const attResp = await startAuthentication(opts);
+      const verificationResp = await fetch(
+        "http://localhost:8081/verify-authentication",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(attResp)
+        }
+      );
+      const verificationJSON = await verificationResp.json();
+      console.log(verificationJSON);
+      if (verificationJSON && verificationJSON.verified) {
+        this.$router.push({ name: "Home" });
+      }
     }
   }
 });
