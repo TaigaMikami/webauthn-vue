@@ -77,7 +77,7 @@ export default Vue.extend({
   methods: {
     async checkDB() {
       console.log("check");
-      const resp = await fetch("http://localhost:8081/in-memory");
+      const resp = await fetch("/in-memory");
       const json = await resp.json();
       console.log(json);
     },
@@ -85,16 +85,13 @@ export default Vue.extend({
       console.log(browserSupportsWebAuthn());
     },
     async registration() {
-      const resp = await fetch(
-        "http://localhost:8081/generate-registration-options",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ userId: this.userId })
-        }
-      );
+      const resp = await fetch("/generate-registration-options", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ userId: this.userId })
+      });
       const opts = await resp.json();
       console.log(opts);
 
@@ -102,45 +99,36 @@ export default Vue.extend({
       console.log(attResp);
 
       const reqAtt = { ...attResp, userId: this.userId };
-      const verificationResp = await fetch(
-        "http://localhost:8081/verify-registration",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(reqAtt)
-        }
-      );
+      const verificationResp = await fetch("/verify-registration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqAtt)
+      });
       const verificationJSON = await verificationResp.json();
       console.log(verificationJSON);
     },
     async authentication() {
-      const resp = await fetch(
-        "http://localhost:8081/generate-authentication-options",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ userId: this.loginUserId })
-        }
-      );
+      const resp = await fetch("/generate-authentication-options", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ userId: this.loginUserId })
+      });
       const opts = await resp.json();
       console.log(opts);
 
       const attResp = await startAuthentication(opts);
       const reqAtt = { ...attResp, userId: this.loginUserId };
-      const verificationResp = await fetch(
-        "http://localhost:8081/verify-authentication",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(reqAtt)
-        }
-      );
+      const verificationResp = await fetch("/verify-authentication", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqAtt)
+      });
       const verificationJSON = await verificationResp.json();
       console.log(verificationJSON);
       if (verificationJSON && verificationJSON.verified) {

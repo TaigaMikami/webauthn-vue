@@ -4,6 +4,9 @@
       <img alt="Vue logo" src="../assets/logo.png" />
       <hr class="ma-4" />
       <h1>Login Success!</h1>
+      <b-button variant="success" @click="goToAuthentication">
+        Authentication
+      </b-button>
     </b-jumbotron>
   </div>
 </template>
@@ -13,11 +16,10 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Home",
-  computed: {
-    logo() {
-      return "@/assets/logo.png";
+  methods: {
+    goToAuthentication() {
+      this.$router.push({ name: "Authentication" });
     }
-  },
-  methods: {}
+  }
 });
 </script>

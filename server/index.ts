@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import { inMemoryUserDeviceDB, loggedInUserId, rpID, expectedOrigin, userDeviceDBObject, transferUserFromDBToUser, transferUserToUserForDB } from "./server-helper";
 import type {
   GenerateRegistrationOptionsOpts
@@ -19,10 +20,9 @@ import generateAuthenticationOptions, { GenerateAuthenticationOptionsOpts } from
 import base64url from "base64url";
 import verifyAuthenticationResponse, { VerifiedAuthenticationResponse, VerifyAuthenticationResponseOpts } from "./lib/webauthn/authentication/verifyAuthenticationResponse";
 import { DbEngine } from "./db/mongodb";
-import { LoggedInUser } from "./types/server";
 
 const app = express();
-const port = "8081"
+const port = "8080"
 const dbEngine = new DbEngine("webauthn-db");
 dbEngine.init();
 
@@ -248,6 +248,10 @@ app.post('/verify-authentication', async (req, res) => {
 
   res.send({ verified });
 });
+
+app.use( "/",
+  express.static(path.resolve(__dirname, "../app") + "/dist")
+);
 
 app.listen(port, () => {
   console.log(`🚀 Server ready at ${port}`)

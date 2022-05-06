@@ -4,14 +4,14 @@ import { DBLoggedInUser, LoggedInUser } from "./types/server";
 const {
   ENABLE_CONFORMANCE,
   ENABLE_HTTPS,
-  RP_ID = 'localhost',
+  RP_ID = 'cc1b-2400-2411-1ac1-c400-4922-83ad-ec80-f762.ngrok.io',
 } = process.env;
 
 export const loggedInUserId = 'internalUserId';
 
 export const rpID = RP_ID;
 
-export let expectedOrigin = 'http://localhost:8080';
+export let expectedOrigin = 'https://cc1b-2400-2411-1ac1-c400-4922-83ad-ec80-f762.ngrok.io';
 
 export const inMemoryUserDeviceDB: { [loggedInUserId: string]: LoggedInUser } = {
   [loggedInUserId]: {
