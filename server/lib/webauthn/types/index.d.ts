@@ -26,6 +26,12 @@ export interface PublicKeyCredentialCreationOptionsJSON extends Omit<PublicKeyCr
   extensions?: AuthenticationExtensionsClientInputs;
 }
 
+export interface PublicKeyCredentialRequestOptionsJSON extends Omit<PublicKeyCredentialRequestOptions, 'challenge' | 'allowCredentials'> {
+  challenge: Base64URLString;
+  allowCredentials?: PublicKeyCredentialDescriptorJSON[];
+  extensions?: AuthenticationExtensionsClientInputs;
+}
+
 /**
  * A slightly-modified RegistrationCredential to simplify working with ArrayBuffers that
  * are Base64URL-encoded in the browser so that they can be sent as JSON to the server.

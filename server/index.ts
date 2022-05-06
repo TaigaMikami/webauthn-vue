@@ -14,6 +14,7 @@ import type {
 
 import type { VerifiedRegistrationResponse, VerifyRegistrationResponseOpts } from "./lib/webauthn/registration/verifyRegistrationResponse";
 import verifyRegistrationResponse from "./lib/webauthn/registration/verifyRegistrationResponse";
+import generateAuthenticationOptions, { GenerateAuthenticationOptionsOpts } from "./lib/webauthn/authentication/generateAuthenticationOptions";
 
 const app = express();
 const port = "8081"
@@ -133,6 +134,36 @@ app.get("/in-memory", (req, res) => {
   console.log(inMemoryUserDeviceDB);
   res.send({ status: "success", user: JSON.stringify(inMemoryUserDeviceDB) });
 })
+
+/**
+ * Login (a.k.a. "Authentication")
+ */
+ app.get('/generate-authentication-options', (req, res) => {
+  // You need to know the user by this point
+  const user = inMemoryUserDeviceDB[loggedInUserId];
+
+  const opts: GenerateAuthenticationOptionsOpts = {
+    timeout: 60000,
+    allowCredentials: user.devices.map(dev => ({
+      id: dev.credentialID,
+      type: 'public-key',
+      transports: dev.transports ?? ['usb', 'ble', 'nfc', 'internal'],
+    })),
+    userVerification: 'required',
+    rpID,
+  };
+
+  const options = generateAuthenticationOptions(opts);
+
+  /**
+   * The server needs to temporarily remember this value for verification, so don't lose it until
+   * after you verify an authenticator response.
+   */
+  inMemoryUserDeviceDB[loggedInUserId].currentChallenge = options.challenge;
+
+  res.send(options);
+});
+
 
 app.listen(port, () => {
   console.log(`🚀 Server ready at ${port}`)
