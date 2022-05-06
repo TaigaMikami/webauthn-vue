@@ -11,6 +11,8 @@ export const loggedInUserId = 'internalUserId';
 
 export const rpID = RP_ID;
 
+export let expectedOrigin = 'http://localhost:8080';
+
 export const inMemoryUserDeviceDB: { [loggedInUserId: string]: LoggedInUser } = {
   [loggedInUserId]: {
     id: loggedInUserId,

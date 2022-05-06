@@ -1,5 +1,5 @@
 import express from "express";
-import { inMemoryUserDeviceDB, loggedInUserId, rpID } from "./server-helper";
+import { inMemoryUserDeviceDB, loggedInUserId, rpID, expectedOrigin } from "./server-helper";
 import type {
   GenerateRegistrationOptionsOpts
 } from "./lib/webauthn/registration/generateRegistrationOptions";
@@ -7,7 +7,13 @@ import {
   // Registration
   generateRegistrationOptions
 } from "./lib/webauthn/registration/generateRegistrationOptions";
+import type {
+  RegistrationCredentialJSON,
+  AuthenticatorDevice
+} from "./lib/webauthn/types";
 
+import type { VerifiedRegistrationResponse, VerifyRegistrationResponseOpts } from "./lib/webauthn/registration/verifyRegistrationResponse";
+import verifyRegistrationResponse from "./lib/webauthn/registration/verifyRegistrationResponse";
 
 const app = express();
 const port = "8081"
@@ -75,6 +81,58 @@ app.get("/generate-registration-options", (req, res) => {
    res.send(options);
 });
 
+app.post('/verify-registration', async (req, res) => {
+  const body: RegistrationCredentialJSON = req.body;
+
+  const user = inMemoryUserDeviceDB[loggedInUserId];
+
+  const expectedChallenge = user.currentChallenge;
+
+  let verification: VerifiedRegistrationResponse;
+  try {
+    const opts: VerifyRegistrationResponseOpts = {
+      credential: body,
+      expectedChallenge: `${expectedChallenge}`,
+      expectedOrigin,
+      expectedRPID: rpID,
+      requireUserVerification: true,
+    };
+    console.log(opts);
+    verification = await verifyRegistrationResponse(opts);
+  } catch (error) {
+    const _error = error as Error;
+    console.error(_error);
+    return res.status(400).send({ error: _error.message });
+  }
+
+  const { verified, registrationInfo } = verification;
+
+  if (verified && registrationInfo) {
+    const { credentialPublicKey, credentialID, counter } = registrationInfo;
+
+    const existingDevice = user.devices.find(device => device.credentialID === credentialID);
+
+    if (!existingDevice) {
+      /**
+       * Add the returned device to the user's list of devices
+       */
+      const newDevice: AuthenticatorDevice = {
+        credentialPublicKey,
+        credentialID,
+        counter,
+        transports: body.transports,
+      };
+      user.devices.push(newDevice);
+    }
+  }
+
+  res.send({ verified });
+});
+
+app.get("/in-memory", (req, res) => {
+  console.log(inMemoryUserDeviceDB);
+  res.send({ status: "success", user: JSON.stringify(inMemoryUserDeviceDB) });
+})
 
 app.listen(port, () => {
   console.log(`🚀 Server ready at ${port}`)
